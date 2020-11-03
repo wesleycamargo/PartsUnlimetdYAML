@@ -1,0 +1,88 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+- azure-pipelines
+
+pool:
+  vmImage: 'windows-latest'
+
+
+stages:
+- stage: Build
+  jobs:
+  - job: BuildApp
+    steps:
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'build'
+
+    - task: DotNetCoreCLI@2
+      inputs:
+        command: 'publish'
+        publishWebProjects: true
+        arguments: '-o $(Build.ArtifactStagingDirectory)'
+        modifyOutputPath: false
+        
+    - task: PublishBuildArtifacts@1
+      inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+- stage: DeployDev
+  jobs:
+  - job: DeployApp
+    steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: 'drop'
+          downloadPath: '$(System.ArtifactsDirectory)'
+
+      - task: AzureRmWebAppDeployment@4
+        inputs:
+          ConnectionType: 'AzureRM'
+          appType: 'webApp'
+          WebAppName: 'maratonaazdevops-dotnetcore'
+          packageForLinux: '$(System.ArtifactsDirectory)/**/*.zip'
+
+- stage: DeployHMG
+  jobs:
+  - job: DeployApp
+    steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: 'drop'
+          downloadPath: '$(System.ArtifactsDirectory)'
+
+      - task: AzureRmWebAppDeployment@4
+        inputs:
+          ConnectionType: 'AzureRM'
+          appType: 'webApp'
+          WebAppName: 'maratonaazdevops-dotnetcore'
+          packageForLinux: '$(System.ArtifactsDirectory)/**/*.zip'
+
+- stage: DeployPRD
+  jobs:
+  - job: DeployApp
+    steps:
+      - task: DownloadBuildArtifacts@0
+        inputs:
+          buildType: 'current'
+          downloadType: 'single'
+          artifactName: 'drop'
+          downloadPath: '$(System.ArtifactsDirectory)'
+
+      - task: AzureRmWebAppDeployment@4
+        inputs:
+          ConnectionType: 'AzureRM'          
+          appType: 'webApp'
+          WebAppName: 'maratonaazdevops-dotnetcore'
+          packageForLinux: '$(System.ArtifactsDirectory)/**/*.zip'
