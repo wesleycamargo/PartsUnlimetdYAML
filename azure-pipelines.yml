@@ -53,5 +53,5 @@ stages:
         inputs:
           ConnectionType: 'AzureRM'
           appType: 'webApp'
-          WebAppName: 'maratonaazdevops-dotnetcore'
+          WebAppName: 'wa-mvpconf-devops-as-code'
           packageForLinux: '$(System.ArtifactsDirectory)/**/*.zip'
